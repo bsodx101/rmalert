@@ -23,11 +23,23 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: Run bot
-        env:
-          TOKEN: ${{ secrets.TOKEN }}
-          API_KEY: ${{ secrets.API_KEY }}
-          CHAT_ID: ${{ secrets.CHAT_ID }}
-          REDMINE_URL: ${{ secrets.REDMINE_URL }}
-        run: |
-          python main.py
+      - name: Copy files to VDS
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.VDS_HOST }}  # IP-адрес вашего VDS
+          username: ${{ secrets.VDS_USER }}  # Имя пользователя для SSH
+          key: ${{ secrets.SSH_KEY }}  # SSH-ключ для доступа
+          port: 22  # Порт SSH, обычно 22
+          source: "."  # Исходные файлы для копирования
+          target: "/path/to/your/deploy/directory"  # Папка на VDS, куда копируются файлы
+
+      - name: Run bot on VDS
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.VDS_HOST }}
+          username: ${{ secrets.VDS_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          port: 22
+          script: |
+            cd /path/to/your/deploy/directory  # Папка с вашим приложением
+            python main.py  # Запуск вашего приложения
