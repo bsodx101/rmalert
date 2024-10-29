@@ -13,7 +13,7 @@ bot = Bot(token=TOKEN)
 API_KEY = os.getenv("API_KEY")  # API ключ для Redmine из окружения
 CHAT_ID = os.getenv("CHAT_ID")  # ID чата для отправки уведомлений из окружения
 REDMINE_URL = os.getenv("REDMINE_URL")  # URL Redmine из окружения
-CHECK_INTERVAL = 500  # Интервал проверки (в секундах)
+CHECK_INTERVAL = 100  # Интервал проверки (в секундах)
 QUERY_ID = 2010  # ID вашей очереди в Redmine
 
 
