@@ -13,23 +13,25 @@ bot = Bot(token=TOKEN)
 API_KEY = os.getenv("API_KEY")  # API ключ для Redmine из окружения
 CHAT_ID = os.getenv("CHAT_ID")  # ID чата для отправки уведомлений из окружения
 REDMINE_URL = os.getenv("REDMINE_URL")  # URL Redmine из окружения
-CHECK_INTERVAL = 100  # Интервал проверки (в секундах)
-QUERY_ID = 2010  # ID вашей очереди в Redmine
+CHECK_INTERVAL = 180  # Интервал проверки (в секундах)
+QUERY_ID = 2015  # ID вашей очереди в Redmine
 
 
 def escape_markdown_v2(text):
     """Экранируем специальные символы для MarkdownV2."""
     return re.sub(r'([_*.\[\]()~`>#+\-=|{}.!])', r'\\\1', text)
 
+
 def priority_to_text(priority_id):
-    """Преобразуем ID приоритета в текстовое значение."""
+    """ID приоритета > текст."""
     if priority_id == 3:
         return "⚠️Высокий"
     elif priority_id == 4:
-        return "🆘КРИТИЧЕСКИЙ🆘"
+        return "🚨КРИТИЧЕСКИЙ🚨"
     return "Cущественный"
 
-# Функция для получения задач из Redmine с фильтром по query_id
+
+# Функция для получения задач с фильтром по query_id
 def get_issues(query_id):
     url = f'{REDMINE_URL}/issues.json?query_id={query_id}'
     headers = {
@@ -45,7 +47,30 @@ def get_issues(query_id):
         print(f"Ошибка при получении задач: {e}")
         return None
 
-# Функция для извлечения задач с высоким и критическим приоритетом
+
+# Функция для получения последнего пользователя, который изменил параметр assigned_to
+def get_last_assigned_user(issue_id):
+    url = f'{REDMINE_URL}/issues/{issue_id}.json?include=journals'
+    headers = {
+        'X-Redmine-API-Key': API_KEY,
+        'Content-Type': 'application/json'
+    }
+    try:
+        response = requests.get(url, headers=headers)
+        response.raise_for_status()
+        journals = response.json().get('issue', {}).get('journals', [])
+
+        for journal in reversed(journals):  # Идем desc
+            for detail in journal.get('details', []):
+                if detail.get('property') == 'attr' and detail.get('name') == 'assigned_to_id':
+                    return journal.get('user', {}).get('name', 'Неизвестный пользователь')
+        return "Изменений не найдено"
+    except requests.exceptions.RequestException as e:
+        print(f"Ошибка при получении журнала для задачи {issue_id}: {e}")
+        return "Ошибка при получении данных"
+
+
+# Функция для извлечения задач if priority_id in [1, 2, 3, 4]
 def parse_issues(data):
     issues = []
     total_count = data['total_count']  # Получаем общее количество задач
@@ -56,19 +81,23 @@ def parse_issues(data):
         project = issue['project']['name']
         issue_id = issue['id']
         issue_url = f'{REDMINE_URL}/issues/{issue_id}'
+        author = issue.get('author', {}).get('name', 'Неизвестный автор')  # Получаем имя автора
 
-        if priority_id in [1 ,2 ,3 ,4]:
+        if priority_id in [1, 2, 3, 4]: # можно выбирать только высокий или крит
             issues.append({
+                'id': issue_id,
                 'subject': subject,
                 'priority_id': priority_id,
                 'status': status,
                 'project': project,
-                'url': issue_url
+                'url': issue_url,
+                'author': author
             })
     print(f"Отфильтрованные задачи: {issues}")
     return issues, total_count
 
-# Функция для отправки уведомления в Telegram
+
+# Функция для отправки
 async def send_telegram_message(message):
     try:
         message = escape_markdown_v2(message)  # Экранируем текст перед отправкой
@@ -78,7 +107,8 @@ async def send_telegram_message(message):
     except TelegramError as e:
         print(f"Ошибка при отправке сообщения в Telegram: {e}")
 
-# Основная функция для отслеживания изменений
+
+# функция для отслеживания изменений
 async def track_page():
     last_issues = []  # Храним предыдущее состояние задач
 
@@ -89,16 +119,20 @@ async def track_page():
 
             new_issues = [issue for issue in current_issues if issue not in last_issues]
             if new_issues:
-                message = "Обновления на!HELPDESK:\n"
+                message = "Новая задача на !HELPDESK:\n"
                 for issue in new_issues:
+                    # Получаем имя последнего пользователя, изменившего assigned_to
+                    last_assigned_user = get_last_assigned_user(issue['id'])
                     message += (
                         f"Проект: {issue['project']}\n"
                         f"Тема: {issue['subject']}\n"
                         f"Приоритет: {priority_to_text(issue['priority_id'])}\n"
                         f"Статус: {issue['status']}\n"
+                        f"Автор: {issue['author']}\n"  # Добавляем автора задачи
+                        f"Назначил(а): {last_assigned_user}\n"
                         f"🍏 {issue['url']}\n\n"
                     )
-                # Добавляем строку с общим количеством задач
+                # тотал
                 message += f"Всего задач 👉🏻{total_count}👈🏻"
 
                 await send_telegram_message(message)
