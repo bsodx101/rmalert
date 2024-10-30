@@ -24,10 +24,10 @@ def escape_markdown_v2(text):
 def priority_to_text(priority_id):
     """Преобразуем ID приоритета в текстовое значение."""
     if priority_id == 3:
-        return "🟠Высокий"
+        return "⚠️Высокий"
     elif priority_id == 4:
-        return "🔺КРИТИЧЕСКИЙ🔺"
-    return "🟡Cущественный"
+        return "🆘КРИТИЧЕСКИЙ🆘"
+    return "Cущественный"
 
 # Функция для получения задач из Redmine с фильтром по query_id
 def get_issues(query_id):
@@ -89,7 +89,7 @@ async def track_page():
 
             new_issues = [issue for issue in current_issues if issue not in last_issues]
             if new_issues:
-                message = "Новая задача на !HELPDESK:\n"
+                message = "Обновления на!HELPDESK:\n"
                 for issue in new_issues:
                     message += (
                         f"Проект: {issue['project']}\n"
