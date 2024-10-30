@@ -38,14 +38,3 @@ jobs:
           port: 22  # Порт SSH, обычно 22
           source: "."  # Исходные файлы для копирования
           target: "~/rmalert"  # Папка на VDS, куда копируются файлы
-
-      - name: Run bot on VDS
-        uses: appleboy/ssh-action@master
-        with:
-          host: ${{ secrets.VDS_HOST }}
-          username: ${{ secrets.VDS_USER }}
-          key: ${{ secrets.SSH_KEY }}
-          port: 22
-          script: |
-            cd ~/rmalert  # Папка с вашим приложением
-            python3 main.py  # Запуск вашего приложения
