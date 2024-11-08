@@ -67,7 +67,7 @@ def get_last_assigned_user(issue_id):
         return ""
     except requests.exceptions.RequestException as e:
         print(f"Ошибка при получении журнала для задачи {issue_id}: {e}")
-        return "автор"
+        return "автор "
 
 
 # Функция для извлечения задач if priority_id in [1, 2, 3, 4]
