@@ -10,15 +10,15 @@ TOKEN = os.getenv("TOKEN")
 bot = Bot(token=TOKEN)
 
 # Настройки бота
-API_KEY = os.getenv("API_KEY")  
-CHAT_ID = os.getenv("CHAT_ID")  
-REDMINE_URL = os.getenv("REDMINE_URL") 
-CHECK_INTERVAL = 180  
-QUERY_ID = 2015 
+API_KEY = os.getenv("API_KEY")  # API ключ для Redmine из окружения
+CHAT_ID = os.getenv("CHAT_ID")  # ID чата для отправки уведомлений из окружения
+REDMINE_URL = os.getenv("REDMINE_URL")  # URL Redmine из окружения
+CHECK_INTERVAL = 180  # Интервал проверки (в секундах)
+QUERY_ID = 2015  # ID вашей очереди в Redmine
 
 
 def escape_markdown_v2(text):
-    """Экранируем спецсимвлы """
+    """Экранируем специальные символы для MarkdownV2."""
     return re.sub(r'([_*.\[\]()~`>#+\-=|{}.!])', r'\\\1', text)
 
 
@@ -41,7 +41,7 @@ def get_issues(query_id):
     try:
         response = requests.get(url, headers=headers)
         response.raise_for_status()
-        print(f"Получены задачи: {response.json()}")  # Логгируем полученные данные
+        print(f"Получены задачи: {response.json()}")  # Логируем полученные данные
         return response.json()
     except requests.exceptions.RequestException as e:
         print(f"Ошибка при получении задач: {e}")
@@ -67,7 +67,7 @@ def get_last_assigned_user(issue_id):
         return "Автор"
     except requests.exceptions.RequestException as e:
         print(f"Ошибка при получении журнала для задачи {issue_id}: {e}")
-       return "Ошибка при получении данных"
+        return "Ошибка при получении данных"
 
 
 # Функция для извлечения задач if priority_id in [1, 2, 3, 4]
@@ -128,7 +128,7 @@ async def track_page():
                         f"Тема: {issue['subject']}\n"
                         f"Приоритет: {priority_to_text(issue['priority_id'])}\n"
                         f"Статус: {issue['status']}\n"
-                        f"Автор: {issue['author']}\n"  
+                        f"Автор: {issue['author']}\n"  # Добавляем автора задачи
                         f"Назначил(а): {last_assigned_user}\n"
                         f"🍏 {issue['url']}\n\n"
                     )
