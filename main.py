@@ -64,10 +64,10 @@ def get_last_assigned_user(issue_id):
             for detail in journal.get('details', []):
                 if detail.get('property') == 'attr' and detail.get('name') == 'assigned_to_id':
                     return journal.get('user', {}).get('name', 'Неизвестный пользователь')
-        return ""
+        return "Автор"
     except requests.exceptions.RequestException as e:
         print(f"Ошибка при получении журнала для задачи {issue_id}: {e}")
-        return "автор "
+       return "Ошибка при получении данных"
 
 
 # Функция для извлечения задач if priority_id in [1, 2, 3, 4]
