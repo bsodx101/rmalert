@@ -13,8 +13,8 @@ bot = Bot(token=TOKEN)
 API_KEY = os.getenv("API_KEY")  # API ключ для Redmine из окружения
 CHAT_ID = os.getenv("CHAT_ID")  # ID чата для отправки уведомлений из окружения
 REDMINE_URL = os.getenv("REDMINE_URL")  # URL Redmine из окружения
-CHECK_INTERVAL = 180  # Интервал проверки (в секундах)
-QUERY_ID = 2015  # ID вашей очереди в Redmine
+CHECK_INTERVAL = 100  # Интервал проверки (в секундах)
+QUERY_ID = 2010  # ID вашей очереди в Redmine
 
 
 def escape_markdown_v2(text):
@@ -83,7 +83,7 @@ def parse_issues(data):
         issue_url = f'{REDMINE_URL}/issues/{issue_id}'
         author = issue.get('author', {}).get('name', 'Неизвестный автор')  # Получаем имя автора
 
-        if priority_id in [1, 2, 3, 4]: # можно выбирать только высокий или крит
+        if priority_id in [1, 2, 3, 4]: #можно выбирать только высокий или крит
             issues.append({
                 'id': issue_id,
                 'subject': subject,
@@ -119,7 +119,7 @@ async def track_page():
 
             new_issues = [issue for issue in current_issues if issue not in last_issues]
             if new_issues:
-                message = "Новая задача на !HELPDESK:\n"
+                message = "Новая задача:\n"
                 for issue in new_issues:
                     # Получаем имя последнего пользователя, изменившего assigned_to
                     last_assigned_user = get_last_assigned_user(issue['id'])
@@ -133,7 +133,7 @@ async def track_page():
                         f"🍏 {issue['url']}\n\n"
                     )
                 # тотал
-                message += f"Всего задач 👉🏻{total_count}👈🏻"
+                message += f"Всего задач 👉🏻{total_count}"
 
                 await send_telegram_message(message)
                 last_issues.extend(new_issues)  # Обновляем список последних задач
